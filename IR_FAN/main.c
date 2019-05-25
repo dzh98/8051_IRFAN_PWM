@@ -124,6 +124,7 @@ void Ir_work(void)//红外键值散转程序
 		 case 0x0c:DataPort=dofly_DuanMa[1];TR1=1;mada=1;bj_flag=1;pwm=2;break;//1 显示相应的按键值
 		 case 0x18:DataPort=dofly_DuanMa[2];pwm=5;break;//2
 		 case 0x5e:DataPort=dofly_DuanMa[3];pwm=0;break;//3
+		 case 0x08:DataPort=0x0;TR1=0;mada=0;bj_flag=0;break;//4
 	     default:break;
 		 }
 	  irpro_ok=0;//处理完成标志
