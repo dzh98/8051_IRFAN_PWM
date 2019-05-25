@@ -1,4 +1,4 @@
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 11:13:14 PAGE 1   
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 1   
 
 
 C51 COMPILER V9.01, COMPILATION OF MODULE MAIN
@@ -8,239 +8,285 @@ COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
 line level    source
 
    1          #include<reg52.h>
-   2          #define DataPort P0
+   2          
    3          sbit IR=P3^2;
    4          sbit DU=P2^0;
    5          sbit WE=P2^1;
    6          sbit mada=P3^1;
    7          sbit led88=P2^2;
-   8          unsigned int zl_count=0;
-   9          unsigned int bj_flag=0;
-  10          unsigned int  time=0;
-  11          unsigned int i=0;
-  12          unsigned char pwm;
-  13          unsigned char code dofly_DuanMa[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};
-  14          unsigned char code fz[8]={0xfe,0xfc,0xfd,0xf9,0xfb,0xf3,0xf7,0xf6}; //反转
-  15          unsigned char code zz[8]={0xf6,0xf7,0xf3,0xfb,0xf9,0xfd,0xfc,0xfe}; //正转
+   8          
+   9          
+  10          unsigned char code DuanMa[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};
+  11          unsigned char code fz[8]={0xfe,0xfc,0xfd,0xf9,0xfb,0xf3,0xf7,0xf6};
+  12          unsigned char code zz[8]={0xf6,0xf7,0xf3,0xfb,0xf9,0xfd,0xfc,0xfe};
+  13          
+  14          
+  15          
   16          unsigned char  irtime;
   17          bit irpro_ok,irok;
   18          unsigned char IRcord[4];
   19          unsigned char irdata[33];
-  20          unsigned int yt_flag=0;
-  21          
-  22          
-  23          void Ir_work(void);
-  24          void Ircordpro(void);
-  25          void bjdj();
-  26          void delay(unsigned int xms);
-  27          void delay(unsigned int xms)
-  28          {
-  29   1          unsigned int x,y;
-  30   1          for(x=xms;x>0;x--)
-  31   1              for(y=110;y>0;y--);
-  32   1      }
-  33          
-  34          void tim0_isr (void) interrupt 1
-  35          {
-  36   1        irtime++;
+  20          
+  21          unsigned int zl_count=0;
+  22          unsigned int bj_flag=0;
+  23          unsigned char pwm;
+  24          unsigned int  time=0;
+  25          
+  26          
+  27          void Ir_work(void);
+  28          void Ircordpro(void);
+  29          void bjdj();
+  30          void delay(unsigned int xms);
+  31          
+  32          void delay(unsigned int xms)
+  33          {
+  34   1          unsigned int x,y;
+  35   1          for(x=xms;x>0;x--)
+  36   1              for(y=110;y>0;y--);
   37   1      }
   38          
-  39          
-  40          
-  41          
-  42          void mada_con() interrupt 3{
-  43   1              if(time==14000)time=0;
-  44   1              TH1=(65536-1000)/256;
-  45   1              TL1=(65536-1000)%256;
-  46   1              zl_count++;
-  47   1              time++;
-  48   1              if(zl_count==pwm){
-  49   2                      mada=0;
-  50   2              }
-  51   1              
-  52   1              if(zl_count==10){
-  53   2                      mada=1;
-  54   2                      zl_count=0;
+  39          void tim0_isr (void) interrupt 1
+  40          {
+  41   1        irtime++;
+  42   1      }
+  43          
+  44          
+  45          
+  46          
+  47          void mada_con() interrupt 3{
+  48   1              if(time==14000)time=0;
+  49   1              TH1=(65536-1000)/256;
+  50   1              TL1=(65536-1000)%256;
+  51   1              zl_count++;
+  52   1              time++;
+  53   1              if(zl_count==pwm){
+  54   2                      mada=0;
   55   2              }
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 11:13:14 PAGE 2   
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 2   
 
-  56   1      }
-  57          
-  58          
-  59          
-  60          
-  61          
+  56   1              
+  57   1              if(zl_count==10){
+  58   2                      mada=1;
+  59   2                      zl_count=0;
+  60   2              }
+  61   1      }
   62          
-  63          void EX0_ISR (void) interrupt 0 //外部中断0服务函数
-  64          {
-  65   1        static unsigned char  i;             //接收红外信号处理
-  66   1        static bit startflag;                //是否开始处理标志位
-  67   1      
-  68   1      if(startflag)                         
-  69   1         {
-  70   2              if(irtime<63&&irtime>=32)//引导码 TC9012的头码，9ms+4.5ms
-  71   2                                                      i=0;
-  72   2                              irdata[i]=irtime;//存储每个电平的持续时间，用于以后判断是0还是1
-  73   2                              irtime=0;
-  74   2                              i++;
-  75   2                               if(i==33)
-  76   2                                      {
-  77   3                                       irok=1;
-  78   3                                       i=0;
-  79   3                                      }
-  80   2              }
-  81   1               else
-  82   1                      {
-  83   2                      irtime=0;
-  84   2                      startflag=1;
-  85   2                      }
-  86   1      }
-  87          
-  88          
-  89          void TIM0init(void)//定时器0初始化
-  90          {
-  91   1      
-  92   1              TH0=0x00; //重载值
-  93   1              TL0=0x00; //初始化值
-  94   1              ET0=1;    //开中断
-  95   1              TR0=1;    
-  96   1      }
-  97          
-  98          void TIM1init(void)//定时器1初始化
-  99          {
- 100   1              TMOD=0x12;
- 101   1              TH1=(65536-1000)/256;
- 102   1              TL1=(65536-1000)%256;
- 103   1              pwm=0;
- 104   1              mada=0;
- 105   1              ET1=1;
- 106   1              TR1=0;
- 107   1      
- 108   1      }
- 109          
- 110          
- 111          
- 112          void EX0init(void)
- 113          {
- 114   1       IT0 = 1;   //指定外部中断0下降沿触发，INT0 (P3.2)
- 115   1       EX0 = 1;   //使能外部中断
- 116   1       EA = 1;    //开总中断
- 117   1      }
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 11:13:14 PAGE 3   
+  63          
+  64          
+  65          
+  66          
+  67          
+  68          void EX0_ISR (void) interrupt 0 
+  69          {
+  70   1        static unsigned char  i;             //接收红外信号处理
+  71   1        static bit startflag;                //是否开始处理标志位
+  72   1      
+  73   1      if(startflag)                         
+  74   1         {
+  75   2              if(irtime<63&&irtime>=32)//引导码 TC9012的头码，9ms+4.5ms
+  76   2                                                      i=0;
+  77   2                              irdata[i]=irtime;//存储每个电平的持续时间，用于以后判断是0还是1
+  78   2                              irtime=0;
+  79   2                              i++;
+  80   2                               if(i==33)
+  81   2                                      {
+  82   3                                       irok=1;
+  83   3                                       i=0;
+  84   3                                      }
+  85   2              }
+  86   1               else
+  87   1                      {
+  88   2                      irtime=0;
+  89   2                      startflag=1;
+  90   2                      }
+  91   1      }
+  92          
+  93          
+  94          void TIM0init(void)
+  95          {
+  96   1      
+  97   1              TH0=0x00;
+  98   1              TL0=0x00;
+  99   1              ET0=1;
+ 100   1              TR0=1;    
+ 101   1      }
+ 102          
+ 103          void TIM1init(void)
+ 104          {
+ 105   1              TMOD=0x12;
+ 106   1              TH1=(65536-1000)/256;
+ 107   1              TL1=(65536-1000)%256;
+ 108   1              pwm=0;
+ 109   1              mada=0;
+ 110   1              ET1=1;
+ 111   1              TR1=0;
+ 112   1      
+ 113   1      }
+ 114          
+ 115          
+ 116          
+ 117          void EX0init(void)
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 3   
 
- 118          
- 119          
- 120          void Ir_work(void)//红外键值散转程序
- 121          {
- 122   1              switch(IRcord[2])//判断第三个数码值
- 123   1                   {
- 124   2                       case 0x0c:DataPort=dofly_DuanMa[1];TR1=1;mada=1;bj_flag=1;pwm=2;break;//1 显示相应的按键值
- 125   2                       case 0x18:DataPort=dofly_DuanMa[2];pwm=5;break;//2
- 126   2                       case 0x5e:DataPort=dofly_DuanMa[3];pwm=0;break;//3
- 127   2                   default:break;
- 128   2                       }
- 129   1                irpro_ok=0;//处理完成标志
- 130   1      
- 131   1      }
- 132          
- 133          void Ircordpro(void)//红外码值处理函数
- 134          { 
- 135   1              unsigned char i, j, k;
- 136   1              unsigned char cord,value;
- 137   1              
- 138   1              k=1;
- 139   1              for(i=0;i<4;i++)      //处理4个字节
- 140   1               {
- 141   2                for(j=1;j<=8;j++) //处理1个字节8位
- 142   2                   {
- 143   3                    cord=irdata[k];
- 144   3                    if(cord>7)//大于某值为1，这个和晶振有绝对关系，这里使用12M计算，此值可以有一定误差
- 145   3                       value|=0x80;
- 146   3                    if(j<8)
- 147   3                          {
- 148   4                               value>>=1;
- 149   4                              }
- 150   3                     k++;
- 151   3                   }
- 152   2               IRcord[i]=value;
- 153   2               value=0;     
- 154   2               } 
- 155   1               irpro_ok=1;//处理完毕标志位置1
- 156   1      }
- 157          
- 158          
- 159          void bjdj(){
- 160   1              if(bj_flag)
- 161   1              {
- 162   2                      if(time<5000)
- 163   2                      {
- 164   3                              for(i=0;i<7;i++)
- 165   3                              {
- 166   4                                      P1=zz[i];
- 167   4                                      delay(5);
- 168   4                              }
- 169   3                      }
- 170   2                      
- 171   2                      if(time>=5000 && time<7000)
- 172   2                      {
- 173   3                              P1=0x0;
- 174   3                      }
- 175   2                      
- 176   2                      if(time>=7000 && time<12000)
- 177   2                      {
- 178   3                              for(i=0;i<7;i++)
- 179   3                              {
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 11:13:14 PAGE 4   
+ 118          {
+ 119   1       IT0 = 1;
+ 120   1       EX0 = 1;
+ 121   1       EA = 1;
+ 122   1      }
+ 123          
+ 124          
+ 125          void Ir_work(void)
+ 126          {
+ 127   1              switch(IRcord[2])
+ 128   1                   {
+ 129   2                       case 0x45:
+ 130   2                                      pwm=2;
+ 131   2                                      TR1=1;
+ 132   2                                      mada=1;
+ 133   2                                      P0=DuanMa[1];
+ 134   2                               break;
+ 135   2                       
+ 136   2                       
+ 137   2                       case 0x0c:
+ 138   2              
+ 139   2                                      P0=DuanMa[1];
+ 140   2                                      pwm=2;
+ 141   2                      
+ 142   2                               
+ 143   2                               break;
+ 144   2      
+ 145   2                       case 0x18:
+ 146   2                      
+ 147   2                                      P0=DuanMa[2];
+ 148   2                                      pwm=5;  
+ 149   2      
+ 150   2                               
+ 151   2                               break;
+ 152   2                      
+ 153   2                       case 0x5e:
+ 154   2                              
+ 155   2                                      P0=DuanMa[3];
+ 156   2                                      pwm=0;  
+ 157   2                      
+ 158   2                               
+ 159   2                               break;
+ 160   2      
+ 161   2                       case 0x08:
+ 162   2                              
+ 163   2                                      bj_flag=~bj_flag;       
+ 164   2                               
+ 165   2                               
+ 166   2                               break;
+ 167   2      
+ 168   2                   default:
+ 169   2                              break;
+ 170   2                       }
+ 171   1                irpro_ok=0;
+ 172   1      
+ 173   1      }
+ 174          
+ 175          void Ircordpro(void)
+ 176          { 
+ 177   1              unsigned char i, j, k;
+ 178   1              unsigned char cord,value;
+ 179   1              
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 4   
 
- 180   4                                      P1=fz[i];
- 181   4                                      delay(5);
- 182   4                              }
- 183   3                      }
- 184   2                      
- 185   2                      if(time>=12000 && time<14000)
- 186   2                      {
- 187   3                              P1=0x0;
- 188   3                      }
- 189   2              }       
- 190   1      }
- 191          
- 192          
- 193          
- 194          
- 195          void main()
- 196          {
- 197   1              EX0init();
- 198   1              TIM0init();
- 199   1              TIM1init();
- 200   1              led88=0;
- 201   1              DataPort=0xfe;
- 202   1              WE=0;
- 203   1              DataPort=0x0;
- 204   1       while(1)
- 205   1         {
- 206   2              bjdj();
- 207   2              if(irok)                        //如果接收好了进行红外处理
- 208   2                {   
- 209   3                 Ircordpro();
- 210   3                 irok=0;
- 211   3                }
- 212   2      
- 213   2          if(irpro_ok)                   //如果处理好后进行工作处理，如按对应的按键后显示对应的数字等
- 214   2                {
- 215   3                 Ir_work();
- 216   3                }
- 217   2         }
- 218   1      }
- 219            
- 220            
+ 180   1              k=1;
+ 181   1              for(i=0;i<4;i++)      //处理4个字节
+ 182   1               {
+ 183   2                for(j=1;j<=8;j++) //处理1个字节8位
+ 184   2                   {
+ 185   3                    cord=irdata[k];
+ 186   3                    if(cord>7)//大于某值为1，这个和晶振有绝对关系，这里使用12M计算，此值可以有一定误差
+ 187   3                       value|=0x80;
+ 188   3                    if(j<8)
+ 189   3                          {
+ 190   4                               value>>=1;
+ 191   4                              }
+ 192   3                     k++;
+ 193   3                   }
+ 194   2               IRcord[i]=value;
+ 195   2               value=0;     
+ 196   2               } 
+ 197   1               irpro_ok=1;
+ 198   1      }
+ 199          
+ 200          
+ 201          void bjdj(){
+ 202   1              unsigned int i=0;
+ 203   1              if(bj_flag)
+ 204   1              {
+ 205   2                      if(time<5000)
+ 206   2                      {
+ 207   3                              for(i=0;i<7;i++)
+ 208   3                              {
+ 209   4                                      P1=zz[i];
+ 210   4                                      delay(5);
+ 211   4                              }
+ 212   3                      }
+ 213   2                      
+ 214   2                      if(time>=5000 && time<7000)
+ 215   2                      {
+ 216   3                              P1=0x0;
+ 217   3                      }
+ 218   2                      
+ 219   2                      if(time>=7000 && time<12000)
+ 220   2                      {
+ 221   3                              for(i=0;i<7;i++)
+ 222   3                              {
+ 223   4                                      P1=fz[i];
+ 224   4                                      delay(5);
+ 225   4                              }
+ 226   3                      }
+ 227   2                      
+ 228   2                      if(time>=12000 && time<14000)
+ 229   2                      {
+ 230   3                              P1=0x0;
+ 231   3                      }
+ 232   2              }       
+ 233   1      }
+ 234          
+ 235          
+ 236          
+ 237          
+ 238          void main()
+ 239          {
+ 240   1              EX0init();
+ 241   1              TIM0init();
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 5   
+
+ 242   1              TIM1init();
+ 243   1              led88=0;
+ 244   1              P0=0xfe;
+ 245   1              WE=0;
+ 246   1              P0=0x0;
+ 247   1              bj_flag=0;
+ 248   1       while(1)
+ 249   1         {
+ 250   2              bjdj();
+ 251   2              if(irok)
+ 252   2                {   
+ 253   3                 Ircordpro();
+ 254   3                 irok=0;
+ 255   3                }
+ 256   2      
+ 257   2          if(irpro_ok)
+ 258   2                {
+ 259   3                 Ir_work();
+ 260   3                }
+ 261   2         }
+ 262   1      }
+ 263            
+ 264            
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    509    ----
+   CODE SIZE        =    515    ----
    CONSTANT SIZE    =     26    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     50    ----
+   DATA SIZE        =     46    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =      3    ----
 END OF MODULE INFORMATION.

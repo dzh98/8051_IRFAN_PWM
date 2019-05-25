@@ -1,29 +1,34 @@
 #include<reg52.h>
-#define DataPort P0
+
 sbit IR=P3^2;
 sbit DU=P2^0;
 sbit WE=P2^1;
 sbit mada=P3^1;
 sbit led88=P2^2;
-unsigned int zl_count=0;
-unsigned int bj_flag=0;
-unsigned int  time=0;
-unsigned int i=0;
-unsigned char pwm;
-unsigned char code dofly_DuanMa[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};
-unsigned char code fz[8]={0xfe,0xfc,0xfd,0xf9,0xfb,0xf3,0xf7,0xf6}; //反转
-unsigned char code zz[8]={0xf6,0xf7,0xf3,0xfb,0xf9,0xfd,0xfc,0xfe}; //正转
+
+
+unsigned char code DuanMa[10]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f};
+unsigned char code fz[8]={0xfe,0xfc,0xfd,0xf9,0xfb,0xf3,0xf7,0xf6};
+unsigned char code zz[8]={0xf6,0xf7,0xf3,0xfb,0xf9,0xfd,0xfc,0xfe};
+
+
+
 unsigned char  irtime;
 bit irpro_ok,irok;
 unsigned char IRcord[4];
 unsigned char irdata[33];
-unsigned int yt_flag=0;
+
+unsigned int zl_count=0;
+unsigned int bj_flag=0;
+unsigned char pwm;
+unsigned int  time=0;
 
 
 void Ir_work(void);
 void Ircordpro(void);
 void bjdj();
 void delay(unsigned int xms);
+
 void delay(unsigned int xms)
 {
     unsigned int x,y;
@@ -60,7 +65,7 @@ void mada_con() interrupt 3{
 
 
 
-void EX0_ISR (void) interrupt 0 //外部中断0服务函数
+void EX0_ISR (void) interrupt 0 
 {
   static unsigned char  i;             //接收红外信号处理
   static bit startflag;                //是否开始处理标志位
@@ -86,16 +91,16 @@ if(startflag)
 }
 
 
-void TIM0init(void)//定时器0初始化
+void TIM0init(void)
 {
 
-	TH0=0x00; //重载值
-	TL0=0x00; //初始化值
-	ET0=1;    //开中断
+	TH0=0x00;
+	TL0=0x00;
+	ET0=1;
 	TR0=1;    
 }
 
-void TIM1init(void)//定时器1初始化
+void TIM1init(void)
 {
 	TMOD=0x12;
 	TH1=(65536-1000)/256;
@@ -111,27 +116,63 @@ void TIM1init(void)//定时器1初始化
 
 void EX0init(void)
 {
- IT0 = 1;   //指定外部中断0下降沿触发，INT0 (P3.2)
- EX0 = 1;   //使能外部中断
- EA = 1;    //开总中断
+ IT0 = 1;
+ EX0 = 1;
+ EA = 1;
 }
 
 
-void Ir_work(void)//红外键值散转程序
+void Ir_work(void)
 {
-	switch(IRcord[2])//判断第三个数码值
+	switch(IRcord[2])
 	     {
-		 case 0x0c:DataPort=dofly_DuanMa[1];TR1=1;mada=1;bj_flag=1;pwm=2;break;//1 显示相应的按键值
-		 case 0x18:DataPort=dofly_DuanMa[2];pwm=5;break;//2
-		 case 0x5e:DataPort=dofly_DuanMa[3];pwm=0;break;//3
-		 case 0x08:DataPort=0x0;TR1=0;mada=0;bj_flag=0;break;//4
-	     default:break;
+		 case 0x45:
+			 	pwm=2;
+				TR1=1;
+				mada=1;
+				P0=DuanMa[1];
+			 break;
+		 
+		 
+		 case 0x0c:
+	
+			 	P0=DuanMa[1];
+			 	pwm=2;
+		
+			 
+			 break;
+
+		 case 0x18:
+		
+			 	P0=DuanMa[2];
+				pwm=5;	
+
+			 
+			 break;
+		
+		 case 0x5e:
+			
+			 	P0=DuanMa[3];
+				pwm=0;	
+		
+			 
+			 break;
+
+		 case 0x08:
+			
+			 	bj_flag=~bj_flag;	
+			 
+			 
+			 break;
+
+	     default:
+		 	break;
 		 }
-	  irpro_ok=0;//处理完成标志
+	  irpro_ok=0;
 
 }
 
-void Ircordpro(void)//红外码值处理函数
+void Ircordpro(void)
 { 
 	unsigned char i, j, k;
 	unsigned char cord,value;
@@ -153,11 +194,12 @@ void Ircordpro(void)//红外码值处理函数
 	 IRcord[i]=value;
 	 value=0;     
 	 } 
-	 irpro_ok=1;//处理完毕标志位置1
+	 irpro_ok=1;
 }
 
 
 void bjdj(){
+	unsigned int i=0;
 	if(bj_flag)
 	{
 		if(time<5000)
@@ -199,19 +241,20 @@ void main()
 	TIM0init();
 	TIM1init();
 	led88=0;
-	DataPort=0xfe;
+	P0=0xfe;
 	WE=0;
-	DataPort=0x0;
+	P0=0x0;
+	bj_flag=0;
  while(1)
    {
 	bjdj();
-	if(irok)                        //如果接收好了进行红外处理
+	if(irok)
 	  {   
 	   Ircordpro();
  	   irok=0;
 	  }
 
-    if(irpro_ok)                   //如果处理好后进行工作处理，如按对应的按键后显示对应的数字等
+    if(irpro_ok)
 	  {
 	   Ir_work();
   	  }
