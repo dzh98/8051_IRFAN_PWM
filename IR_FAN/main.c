@@ -85,8 +85,8 @@ if(startflag)
 	}
 	 else
 		{
-		irtime=0;
-		startflag=1;
+			irtime=0;
+			startflag=1;
 		}
 }
 
@@ -127,43 +127,53 @@ void Ir_work(void)
 	switch(IRcord[2])
 	     {
 		 case 0x45:
-			 	pwm=2;
-				TR1=1;
-				mada=1;
-				P0=DuanMa[1];
-			 break;
+			 	if(TR1)
+				{
+					TR1=0;
+					mada=0;
+					P0=0x0;
+					bj_flag=0;
+				}
+				else
+				{
+					TR1=1;
+					pwm=3;
+					mada=1;
+					P0=DuanMa[1];
+				}
+			 	break;
+
+		 case 0x46:
+				if(TR1)
+				{
+					bj_flag=~bj_flag;
+				}		 
+			 	break;
 		 
 		 
 		 case 0x0c:
-	
-			 	P0=DuanMa[1];
-			 	pwm=2;
-		
-			 
-			 break;
+				if(TR1)
+				{
+					P0=DuanMa[1];
+			 	    pwm=3;	
+				}		 
+			 	break;
 
 		 case 0x18:
-		
-			 	P0=DuanMa[2];
-				pwm=5;	
-
-			 
-			 break;
+				if(TR1)
+				{
+					P0=DuanMa[2];
+					pwm=6;	
+				}	 
+			 	break;
 		
 		 case 0x5e:
-			
-			 	P0=DuanMa[3];
-				pwm=0;	
-		
-			 
-			 break;
-
-		 case 0x08:
-			
-			 	bj_flag=~bj_flag;	
-			 
-			 
-			 break;
+				if(TR1)
+				{
+					P0=DuanMa[3];
+					pwm=9;		
+				}
+			 	break;
 
 	     default:
 		 	break;

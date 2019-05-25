@@ -1,4 +1,4 @@
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 1   
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 21:53:52 PAGE 1   
 
 
 C51 COMPILER V9.01, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   53   1              if(zl_count==pwm){
   54   2                      mada=0;
   55   2              }
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 2   
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 21:53:52 PAGE 2   
 
   56   1              
   57   1              if(zl_count==10){
@@ -96,8 +96,8 @@ line level    source
   85   2              }
   86   1               else
   87   1                      {
-  88   2                      irtime=0;
-  89   2                      startflag=1;
+  88   2                              irtime=0;
+  89   2                              startflag=1;
   90   2                      }
   91   1      }
   92          
@@ -126,7 +126,7 @@ line level    source
  115          
  116          
  117          void EX0init(void)
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 3   
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 21:53:52 PAGE 3   
 
  118          {
  119   1       IT0 = 1;
@@ -140,149 +140,159 @@ line level    source
  127   1              switch(IRcord[2])
  128   1                   {
  129   2                       case 0x45:
- 130   2                                      pwm=2;
- 131   2                                      TR1=1;
- 132   2                                      mada=1;
- 133   2                                      P0=DuanMa[1];
- 134   2                               break;
- 135   2                       
- 136   2                       
- 137   2                       case 0x0c:
- 138   2              
- 139   2                                      P0=DuanMa[1];
- 140   2                                      pwm=2;
- 141   2                      
- 142   2                               
- 143   2                               break;
- 144   2      
- 145   2                       case 0x18:
- 146   2                      
- 147   2                                      P0=DuanMa[2];
- 148   2                                      pwm=5;  
- 149   2      
- 150   2                               
- 151   2                               break;
- 152   2                      
- 153   2                       case 0x5e:
- 154   2                              
- 155   2                                      P0=DuanMa[3];
- 156   2                                      pwm=0;  
- 157   2                      
- 158   2                               
- 159   2                               break;
- 160   2      
- 161   2                       case 0x08:
- 162   2                              
- 163   2                                      bj_flag=~bj_flag;       
- 164   2                               
- 165   2                               
- 166   2                               break;
- 167   2      
- 168   2                   default:
- 169   2                              break;
- 170   2                       }
- 171   1                irpro_ok=0;
- 172   1      
- 173   1      }
- 174          
- 175          void Ircordpro(void)
- 176          { 
- 177   1              unsigned char i, j, k;
- 178   1              unsigned char cord,value;
- 179   1              
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 4   
+ 130   2                                      if(TR1)
+ 131   2                                      {
+ 132   3                                              TR1=0;
+ 133   3                                              mada=0;
+ 134   3                                              P0=0x0;
+ 135   3                                              bj_flag=0;
+ 136   3                                      }
+ 137   2                                      else
+ 138   2                                      {
+ 139   3                                              TR1=1;
+ 140   3                                              pwm=3;
+ 141   3                                              mada=1;
+ 142   3                                              P0=DuanMa[1];
+ 143   3                                      }
+ 144   2                                      break;
+ 145   2      
+ 146   2                       case 0x46:
+ 147   2                                      if(TR1)
+ 148   2                                      {
+ 149   3                                              bj_flag=~bj_flag;
+ 150   3                                      }                
+ 151   2                                      break;
+ 152   2                       
+ 153   2                       
+ 154   2                       case 0x0c:
+ 155   2                                      if(TR1)
+ 156   2                                      {
+ 157   3                                              P0=DuanMa[1];
+ 158   3                                          pwm=3;      
+ 159   3                                      }                
+ 160   2                                      break;
+ 161   2      
+ 162   2                       case 0x18:
+ 163   2                                      if(TR1)
+ 164   2                                      {
+ 165   3                                              P0=DuanMa[2];
+ 166   3                                              pwm=6;  
+ 167   3                                      }        
+ 168   2                                      break;
+ 169   2                      
+ 170   2                       case 0x5e:
+ 171   2                                      if(TR1)
+ 172   2                                      {
+ 173   3                                              P0=DuanMa[3];
+ 174   3                                              pwm=9;          
+ 175   3                                      }
+ 176   2                                      break;
+ 177   2      
+ 178   2                   default:
+ 179   2                              break;
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 21:53:52 PAGE 4   
 
- 180   1              k=1;
- 181   1              for(i=0;i<4;i++)      //处理4个字节
- 182   1               {
- 183   2                for(j=1;j<=8;j++) //处理1个字节8位
- 184   2                   {
- 185   3                    cord=irdata[k];
- 186   3                    if(cord>7)//大于某值为1，这个和晶振有绝对关系，这里使用12M计算，此值可以有一定误差
- 187   3                       value|=0x80;
- 188   3                    if(j<8)
- 189   3                          {
- 190   4                               value>>=1;
- 191   4                              }
- 192   3                     k++;
- 193   3                   }
- 194   2               IRcord[i]=value;
- 195   2               value=0;     
- 196   2               } 
- 197   1               irpro_ok=1;
- 198   1      }
- 199          
- 200          
- 201          void bjdj(){
- 202   1              unsigned int i=0;
- 203   1              if(bj_flag)
- 204   1              {
- 205   2                      if(time<5000)
- 206   2                      {
- 207   3                              for(i=0;i<7;i++)
- 208   3                              {
- 209   4                                      P1=zz[i];
- 210   4                                      delay(5);
- 211   4                              }
- 212   3                      }
- 213   2                      
- 214   2                      if(time>=5000 && time<7000)
- 215   2                      {
- 216   3                              P1=0x0;
- 217   3                      }
- 218   2                      
- 219   2                      if(time>=7000 && time<12000)
- 220   2                      {
- 221   3                              for(i=0;i<7;i++)
- 222   3                              {
- 223   4                                      P1=fz[i];
- 224   4                                      delay(5);
- 225   4                              }
- 226   3                      }
- 227   2                      
- 228   2                      if(time>=12000 && time<14000)
- 229   2                      {
- 230   3                              P1=0x0;
- 231   3                      }
- 232   2              }       
- 233   1      }
- 234          
- 235          
- 236          
- 237          
- 238          void main()
- 239          {
- 240   1              EX0init();
- 241   1              TIM0init();
-C51 COMPILER V9.01   MAIN                                                                  05/25/2019 17:31:13 PAGE 5   
+ 180   2                       }
+ 181   1                irpro_ok=0;
+ 182   1      
+ 183   1      }
+ 184          
+ 185          void Ircordpro(void)
+ 186          { 
+ 187   1              unsigned char i, j, k;
+ 188   1              unsigned char cord,value;
+ 189   1              
+ 190   1              k=1;
+ 191   1              for(i=0;i<4;i++)      //处理4个字节
+ 192   1               {
+ 193   2                for(j=1;j<=8;j++) //处理1个字节8位
+ 194   2                   {
+ 195   3                    cord=irdata[k];
+ 196   3                    if(cord>7)//大于某值为1，这个和晶振有绝对关系，这里使用12M计算，此值可以有一定误差
+ 197   3                       value|=0x80;
+ 198   3                    if(j<8)
+ 199   3                          {
+ 200   4                               value>>=1;
+ 201   4                              }
+ 202   3                     k++;
+ 203   3                   }
+ 204   2               IRcord[i]=value;
+ 205   2               value=0;     
+ 206   2               } 
+ 207   1               irpro_ok=1;
+ 208   1      }
+ 209          
+ 210          
+ 211          void bjdj(){
+ 212   1              unsigned int i=0;
+ 213   1              if(bj_flag)
+ 214   1              {
+ 215   2                      if(time<5000)
+ 216   2                      {
+ 217   3                              for(i=0;i<7;i++)
+ 218   3                              {
+ 219   4                                      P1=zz[i];
+ 220   4                                      delay(5);
+ 221   4                              }
+ 222   3                      }
+ 223   2                      
+ 224   2                      if(time>=5000 && time<7000)
+ 225   2                      {
+ 226   3                              P1=0x0;
+ 227   3                      }
+ 228   2                      
+ 229   2                      if(time>=7000 && time<12000)
+ 230   2                      {
+ 231   3                              for(i=0;i<7;i++)
+ 232   3                              {
+ 233   4                                      P1=fz[i];
+ 234   4                                      delay(5);
+ 235   4                              }
+ 236   3                      }
+ 237   2                      
+ 238   2                      if(time>=12000 && time<14000)
+ 239   2                      {
+ 240   3                              P1=0x0;
+ 241   3                      }
+C51 COMPILER V9.01   MAIN                                                                  05/25/2019 21:53:52 PAGE 5   
 
- 242   1              TIM1init();
- 243   1              led88=0;
- 244   1              P0=0xfe;
- 245   1              WE=0;
- 246   1              P0=0x0;
- 247   1              bj_flag=0;
- 248   1       while(1)
- 249   1         {
- 250   2              bjdj();
- 251   2              if(irok)
- 252   2                {   
- 253   3                 Ircordpro();
- 254   3                 irok=0;
- 255   3                }
- 256   2      
- 257   2          if(irpro_ok)
- 258   2                {
- 259   3                 Ir_work();
- 260   3                }
- 261   2         }
- 262   1      }
- 263            
- 264            
+ 242   2              }       
+ 243   1      }
+ 244          
+ 245          
+ 246          
+ 247          
+ 248          void main()
+ 249          {
+ 250   1              EX0init();
+ 251   1              TIM0init();
+ 252   1              TIM1init();
+ 253   1              led88=0;
+ 254   1              P0=0xfe;
+ 255   1              WE=0;
+ 256   1              P0=0x0;
+ 257   1              bj_flag=0;
+ 258   1       while(1)
+ 259   1         {
+ 260   2              bjdj();
+ 261   2              if(irok)
+ 262   2                {   
+ 263   3                 Ircordpro();
+ 264   3                 irok=0;
+ 265   3                }
+ 266   2      
+ 267   2          if(irpro_ok)
+ 268   2                {
+ 269   3                 Ir_work();
+ 270   3                }
+ 271   2         }
+ 272   1      }
+ 273            
+ 274            
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    515    ----
+   CODE SIZE        =    543    ----
    CONSTANT SIZE    =     26    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
